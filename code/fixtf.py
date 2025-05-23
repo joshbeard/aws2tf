@@ -723,12 +723,14 @@ def deref_role_arn(t1,tt1,tt2):
         if tt2.endswith("*"): return t1
         if tt2.startswith("arn:"): tt2=tt2.split('/')[-1]
         if tt2 in globals.rolelist:
-            t1=tt1 + " = aws_iam_role." + tt2 + ".arn\n"
+            resource_ref = common.generate_resource_reference("aws_iam_role", tt2, "arn")
+            t1=tt1 + " = " + resource_ref + "\n"
             common.add_dependancy("aws_iam_role",tt2)
             
     # it's not an arn - just a name
     elif ":" not in tt2 and tt2 != "null": # assume it's a role name
-        t1=tt1 + " = aws_iam_role." + tt2 + ".arn\n"
+        resource_ref = common.generate_resource_reference("aws_iam_role", tt2, "arn")
+        t1=tt1 + " = " + resource_ref + "\n"
         common.add_dependancy("aws_iam_role", tt2)
 
     return t1
@@ -770,14 +772,16 @@ def deref_role_arn_array(t1,tt1,tt2):
             if ":role/" in tt2:
                 subn=tt2.split(',')[i]
                 subn=subn.strip('/')[-1]
-                subs=subs + "aws_iam_role." + subn + ".arn,"
+                resource_ref = common.generate_resource_reference("aws_iam_role", subn, "arn")
+                subs=subs + resource_ref + ","
                 common.add_dependancy("aws_iam_role",subn)
 
             
     if cc == 0:
         if ":role/" in tt2:
             tt2=tt2.split('/')[-1]
-            subs=subs + "aws_iam_role." + tt2 + ".arn,"
+            resource_ref = common.generate_resource_reference("aws_iam_role", tt2, "arn")
+            subs=subs + resource_ref + ","
             common.add_dependancy("aws_iam_role",tt2)
              
     t1=tt1 + " = [" + subs + "]\n"

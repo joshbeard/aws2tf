@@ -962,12 +962,9 @@ def write_import(type,theid,tfid):
       ## todo -  if theid starts with a number or is an od (but what if its hexdecimal  ?)
 
       if tfid is None:
-            tfid=theid.replace("/","_").replace(".","_").replace(":","_").replace("|","_").replace("$","_").replace(",","_").replace("&","_").replace("#","_").replace("[","_").replace("]","_").replace("=","_").replace("!","_").replace(";","_").replace(" ","_").replace("*","star").replace("\\052","star")
+            tfid = normalize_terraform_name(theid)
       else:
-            tfid=tfid.replace("/", "_").replace(".", "_").replace(":", "_").replace("|", "_").replace("$", "_").replace(",","_").replace("&","_").replace("#","_").replace("[","_").replace("]","_").replace("=","_").replace("!","_").replace(";","_").replace(" ","_").replace("*","star").replace("\\052","star")
-
-         #catch tfid starts with number
-      if tfid[:1].isdigit(): tfid="r-"+tfid
+            tfid = normalize_terraform_name(tfid)
 
       if "!" in theid:
          fn="notimported/import__"+type+"__"+tfid+".tf"
@@ -1815,3 +1812,29 @@ def trivy_check():
                 print(f"Error running trivy for {severity} severity")
 
     print(f"Trivy security report: {mydir}/security-report.txt")
+
+def normalize_terraform_name(name):
+   """
+   Normalize a name to be a valid Terraform resource identifier.
+   This applies the same logic as write_import to ensure consistency
+   between resource names and references.
+   """
+   if name is None:
+      return None
+
+   # Apply character replacements
+   tfid = name.replace("/","_").replace(".","_").replace(":","_").replace("|","_").replace("$","_").replace(",","_").replace("&","_").replace("#","_").replace("[","_").replace("]","_").replace("=","_").replace("!","_").replace(";","_").replace(" ","_").replace("*","star").replace("\\052","star")
+
+   # Handle names starting with numbers
+   if tfid[:1].isdigit():
+      tfid = "r-" + tfid
+
+   return tfid
+
+def generate_resource_reference(resource_type, resource_name, attribute="id"):
+   """
+   Generate a normalized Terraform resource reference.
+   This ensures consistent naming between resource definitions and references.
+   """
+   normalized_name = normalize_terraform_name(resource_name)
+   return f"{resource_type}.{normalized_name}.{attribute}"
